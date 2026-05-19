@@ -1,1 +1,954 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceLog — Meeting Transcriber (Free)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --accent: #c84b2f;
+    --accent2: #2f6fc8;
+    --muted: #7a7468;
+    --border: #d4cec2;
+    --success: #2a7a4b;
+    --card: #ffffff;
+    --shadow: 0 2px 24px rgba(13,13,13,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 20px 40px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn-settings {
+    background: none;
+    border: 1.5px solid var(--border);
+    padding: 6px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .btn-settings:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* ── LAYOUT ── */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    margin-bottom: 48px;
+  }
+
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(36px, 5vw, 58px);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .hero h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .hero p {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  /* ── API KEYS PANEL ── */
+  .keys-panel {
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    padding: 24px 28px;
+    margin-bottom: 32px;
+  }
+
+  .keys-panel h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .keys-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .keys-grid { grid-template-columns: 1fr; } }
+
+  .key-field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .key-field input {
+    width: 100%;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    padding: 10px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .key-field input:focus { border-color: var(--ink); }
+
+  .keys-note {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── UPLOAD ZONE ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--card);
+    margin-bottom: 32px;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--ink);
+    background: var(--cream);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .upload-zone h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .upload-zone p {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .upload-zone .file-types {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ── FILE INFO ── */
+  .file-info {
+    display: none;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .file-info.show { display: flex; }
+
+  .file-icon { font-size: 28px; flex-shrink: 0; }
+
+  .file-details { flex: 1; }
+  .file-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+  .file-meta { font-size: 11px; color: var(--muted); }
+
+  /* ── PROCESS BUTTON ── */
+  .btn-process {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 16px 40px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .btn-process:hover:not(:disabled) { background: var(--accent); }
+  .btn-process:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── PROGRESS ── */
+  .progress-panel {
+    display: none;
+    margin-bottom: 32px;
+  }
+
+  .progress-panel.show { display: block; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .progress-pct {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step-item:last-child { border-bottom: none; }
+  .step-item.active { color: var(--ink); font-weight: 500; }
+  .step-item.done { color: var(--success); }
+
+  .step-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .step-item.active .step-dot { background: var(--accent); animation: pulse 1s infinite; }
+  .step-item.done .step-dot { background: var(--success); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── RESULTS ── */
+  .results {
+    display: none;
+  }
+
+  .results.show { display: block; }
+
+  .result-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  .tab-content {
+    display: none;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-top: none;
+  }
+
+  .tab-content.active { display: block; }
+
+  .content-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .content-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .btn-copy {
+    background: none;
+    border: 1.5px solid var(--border);
+    padding: 6px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-copy:hover { border-color: var(--ink); color: var(--ink); }
+
+  .content-body {
+    padding: 28px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ink);
+    max-height: 520px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* Summary specific styles */
+  .summary-body {
+    padding: 28px;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+
+  .summary-section {
+    margin-bottom: 28px;
+  }
+
+  .summary-section:last-child { margin-bottom: 0; }
+
+  .summary-section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .summary-section p,
+  .summary-section li {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+
+  .summary-section ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .summary-section li {
+    padding: 4px 0 4px 16px;
+    position: relative;
+  }
+
+  .summary-section li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 12px;
+  }
+
+  /* Error */
+  .error-banner {
+    display: none;
+    background: #fff0ed;
+    border: 1.5px solid #c84b2f;
+    padding: 16px 20px;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .error-banner.show { display: block; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 64px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* Highlight for chunk counter */
+  .chunk-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-dot"></span>
+    VoiceLog
+  </div>
+  <span class="logo-sub">Meeting Intelligence</span>
+  <div class="header-right">
+    <button class="btn-settings" onclick="toggleKeys()">⚙ API Keys</button>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Turn recordings into<br><em>clear intelligence</em></h1>
+    <p>Upload any .aac meeting recording — even hours-long — and get a full transcript plus AI-powered summary. Transcription is <strong>100% free</strong> via Groq Whisper.</p>
+  </div>
+
+  <!-- API Keys -->
+  <div class="keys-panel" id="keysPanel">
+    <h3>🔑 API Configuration</h3>
+    <div class="keys-grid">
+      <div class="key-field">
+        <label>Groq API Key (Free Whisper transcription)</label>
+        <input type="password" id="groqKey" placeholder="gsk_..." oninput="saveKeys()">
+      </div>
+      <div class="key-field">
+        <label>Anthropic API Key (Claude summary)</label>
+        <input type="password" id="anthropicKey" placeholder="sk-ant-..." oninput="saveKeys()">
+      </div>
+    </div>
+    <p class="keys-note">
+      Keys are saved only in your browser's localStorage — never sent anywhere except the respective APIs.<br>
+      🆓 Get a <strong>free</strong> Groq key at <strong>console.groq.com</strong> (no credit card needed) · Get Anthropic key at <strong>console.anthropic.com</strong>
+    </p>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept=".aac,.mp3,.mp4,.m4a,.wav,.ogg,.flac,.webm" onchange="handleFile(this.files[0])">
+    <span class="upload-icon">🎙️</span>
+    <h2>Drop your audio file here</h2>
+    <p>or click to browse</p>
+    <div class="file-types">
+      <span class="tag">.aac</span>
+      <span class="tag">.mp3</span>
+      <span class="tag">.m4a</span>
+      <span class="tag">.wav</span>
+      <span class="tag">.webm</span>
+    </div>
+  </div>
+
+  <!-- File Info -->
+  <div class="file-info" id="fileInfo">
+    <div class="file-icon">🎵</div>
+    <div class="file-details">
+      <div class="file-name" id="fileName">—</div>
+      <div class="file-meta" id="fileMeta">—</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- Process Button -->
+  <button class="btn-process" id="processBtn" onclick="startProcessing()" disabled>
+    <span>▶</span> Transcribe &amp; Summarize
+  </button>
+
+  <!-- Progress -->
+  <div class="progress-panel" id="progressPanel">
+    <div class="progress-header">
+      <span class="progress-label" id="progressLabel">Processing…</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-steps" id="progressSteps"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+    <div class="result-tabs">
+      <button class="tab-btn active" onclick="switchTab('summary')">Summary</button>
+      <button class="tab-btn" onclick="switchTab('transcript')">Full Transcript</button>
+    </div>
+
+    <div class="tab-content active" id="tab-summary">
+      <div class="content-header">
+        <span class="content-title">Meeting Summary</span>
+        <button class="btn-copy" onclick="copyContent('summary')">⎘ Copy</button>
+      </div>
+      <div class="summary-body" id="summaryContent"></div>
+    </div>
+
+    <div class="tab-content" id="tab-transcript">
+      <div class="content-header">
+        <span class="content-title">Full Transcript</span>
+        <button class="btn-copy" onclick="copyContent('transcript')">⎘ Copy</button>
+      </div>
+      <div class="content-body" id="transcriptContent"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  VoiceLog — powered by Groq Whisper (free) &amp; Anthropic Claude · Keys stored locally, never shared
+</footer>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let selectedFile = null;
+let fullTranscript = '';
+
+const CHUNK_SIZE_MB = 24; // Groq Whisper limit is 25MB
+const CHUNK_SIZE_BYTES = CHUNK_SIZE_MB * 1024 * 1024;
+
+// ── INIT ──────────────────────────────────────────────
+window.onload = () => {
+  const gk = document.getElementById('groqKey');
+  const ak = document.getElementById('anthropicKey');
+  gk.value = localStorage.getItem('vl_groq') || '';
+  ak.value = localStorage.getItem('vl_anthropic') || '';
+
+  // Drag and drop
+  const zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+};
+
+function saveKeys() {
+  localStorage.setItem('vl_groq', document.getElementById('groqKey').value);
+  localStorage.setItem('vl_anthropic', document.getElementById('anthropicKey').value);
+}
+
+function toggleKeys() {
+  const panel = document.getElementById('keysPanel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+
+// ── FILE HANDLING ─────────────────────────────────────
+function handleFile(file) {
+  if (!file) return;
+  selectedFile = file;
+
+  const info = document.getElementById('fileInfo');
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileMeta').textContent =
+    `${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'audio file'}`;
+  info.classList.add('show');
+
+  document.getElementById('processBtn').disabled = false;
+  document.getElementById('results').classList.remove('show');
+  hideError();
+}
+
+// ── STEPS ─────────────────────────────────────────────
+const STEPS = [
+  { id: 'prepare', label: 'Preparing audio file' },
+  { id: 'chunk',   label: 'Splitting into chunks (for long files)' },
+  { id: 'transcribe', label: 'Transcribing with Groq Whisper (free)' },
+  { id: 'stitch',  label: 'Stitching transcript' },
+  { id: 'summarize', label: 'Generating meeting summary with Claude' },
+];
+
+function renderSteps() {
+  const container = document.getElementById('progressSteps');
+  container.innerHTML = STEPS.map(s =>
+    `<div class="step-item" id="step-${s.id}">
+      <span class="step-dot"></span>
+      <span>${s.label}</span>
+    </div>`
+  ).join('');
+}
+
+function setStep(id, state) {
+  const el = document.getElementById(`step-${id}`);
+  if (!el) return;
+  el.className = `step-item ${state}`;
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = Math.round(pct) + '%';
+  if (label) document.getElementById('progressLabel').textContent = label;
+}
+
+// ── MAIN PROCESSOR ────────────────────────────────────
+async function startProcessing() {
+  const groqKey = document.getElementById('groqKey').value.trim();
+  const anthropicKey = document.getElementById('anthropicKey').value.trim();
+
+  if (!groqKey) return showError('Please enter your Groq API key for transcription. Get one free at console.groq.com');
+  if (!anthropicKey) return showError('Please enter your Anthropic API key for meeting summarization.');
+  if (!selectedFile) return showError('Please select an audio file first.');
+
+  hideError();
+  document.getElementById('processBtn').disabled = true;
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('progressPanel').classList.add('show');
+  renderSteps();
+  setProgress(0, 'Starting…');
+
+  try {
+    // STEP 1: Prepare
+    setStep('prepare', 'active');
+    setProgress(5, 'Reading file…');
+    await tick();
+    setStep('prepare', 'done');
+
+    // STEP 2: Chunk
+    setStep('chunk', 'active');
+    setProgress(10, 'Splitting file into chunks…');
+    const chunks = await splitAudioFile(selectedFile);
+    setStep('chunk', 'done');
+    setProgress(15, `${chunks.length} chunk(s) ready`);
+
+    // STEP 3: Transcribe
+    setStep('transcribe', 'active');
+    const transcripts = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const pct = 15 + ((i / chunks.length) * 55);
+      setProgress(pct, `Transcribing chunk ${i+1} of ${chunks.length}…`);
+      const text = await transcribeChunk(chunks[i], groqKey, selectedFile.name);
+      transcripts.push(text);
+    }
+    setStep('transcribe', 'done');
+
+    // STEP 4: Stitch
+    setStep('stitch', 'active');
+    setProgress(72, 'Merging transcript segments…');
+    fullTranscript = transcripts.join('\n\n');
+    document.getElementById('transcriptContent').textContent = fullTranscript;
+    setStep('stitch', 'done');
+
+    // STEP 5: Summarize
+    setStep('summarize', 'active');
+    setProgress(80, 'Claude is analyzing the meeting…');
+    const summary = await summarizeWithClaude(fullTranscript, anthropicKey);
+    renderSummary(summary);
+    setStep('summarize', 'done');
+
+    setProgress(100, 'Done!');
+    document.getElementById('results').classList.add('show');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (err) {
+    showError('Error: ' + err.message);
+    console.error(err);
+  } finally {
+    document.getElementById('processBtn').disabled = false;
+  }
+}
+
+// ── AUDIO SPLITTING ───────────────────────────────────
+// Splits file into ≤24MB blobs preserving the original type
+async function splitAudioFile(file) {
+  if (file.size <= CHUNK_SIZE_BYTES) return [file];
+
+  const chunks = [];
+  let offset = 0;
+  let idx = 1;
+  while (offset < file.size) {
+    const end = Math.min(offset + CHUNK_SIZE_BYTES, file.size);
+    const blob = file.slice(offset, end, file.type);
+    // Give each blob a recognizable name
+    const chunkFile = new File([blob], `chunk_${idx}_${file.name}`, { type: file.type });
+    chunks.push(chunkFile);
+    offset = end;
+    idx++;
+  }
+  return chunks;
+}
+
+// ── GROQ WHISPER TRANSCRIPTION (FREE) ────────────────
+async function transcribeChunk(fileBlob, apiKey, originalName) {
+  const formData = new FormData();
+  formData.append('file', fileBlob, fileBlob.name || originalName);
+  formData.append('model', 'whisper-large-v3');  // Best Groq Whisper model, free
+  formData.append('response_format', 'text');
+  formData.append('language', 'en');             // Remove this line for auto language detection
+
+  const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    body: formData
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Groq API error (${response.status}). Check your key at console.groq.com`);
+  }
+
+  return await response.text();
+}
+
+// ── CLAUDE SUMMARY ────────────────────────────────────
+async function summarizeWithClaude(transcript, apiKey) {
+  const prompt = `You are a meeting intelligence assistant. Analyze this meeting transcript and provide a structured summary.
+
+TRANSCRIPT:
+${transcript.slice(0, 90000)}
+
+Provide a structured meeting summary with these sections. Respond ONLY with a JSON object, no markdown, no preamble:
+{
+  "overview": "2-3 sentence overview of what this meeting was about",
+  "keyPoints": ["point 1", "point 2", ...],
+  "decisions": ["decision 1", ...],
+  "actionItems": ["action 1 (owner if mentioned)", ...],
+  "nextSteps": ["step 1", ...]
+}
+
+If a section has no content, use an empty array or empty string. Be concise and factual.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Claude API error (${response.status})`);
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text || '{}';
+
+  try {
+    return JSON.parse(text.replace(/```json|```/g, '').trim());
+  } catch {
+    return { overview: text, keyPoints: [], decisions: [], actionItems: [], nextSteps: [] };
+  }
+}
+
+// ── RENDER SUMMARY ────────────────────────────────────
+function renderSummary(data) {
+  const container = document.getElementById('summaryContent');
+
+  const section = (emoji, title, items, isText = false) => {
+    if (!items || (Array.isArray(items) && items.length === 0) || items === '') return '';
+    const content = isText
+      ? `<p>${items}</p>`
+      : `<ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+    return `<div class="summary-section">
+      <h3>${emoji} ${title}</h3>
+      ${content}
+    </div>`;
+  };
+
+  container.innerHTML = [
+    section('📋', 'Overview', data.overview, true),
+    section('💡', 'Key Discussion Points', data.keyPoints),
+    section('✅', 'Decisions Made', data.decisions),
+    section('📌', 'Action Items', data.actionItems),
+    section('🔜', 'Next Steps', data.nextSteps),
+  ].join('');
+}
+
+// ── UI HELPERS ────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'summary') || (i === 1 && tab === 'transcript'));
+  });
+  document.getElementById('tab-summary').classList.toggle('active', tab === 'summary');
+  document.getElementById('tab-transcript').classList.toggle('active', tab === 'transcript');
+}
+
+async function copyContent(type) {
+  const text = type === 'transcript'
+    ? document.getElementById('transcriptContent').textContent
+    : document.getElementById('summaryContent').innerText;
+  await navigator.clipboard.writeText(text).catch(() => {});
+  const btn = event.target;
+  btn.textContent = '✓ Copied!';
+  setTimeout(() => btn.innerHTML = '⎘ Copy', 1500);
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('errorBanner').classList.remove('show');
+}
+
+function tick() {
+  return new Promise(r => setTimeout(r, 50));
+}
+</script>
+</body>
+</html>
+
